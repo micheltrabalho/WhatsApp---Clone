@@ -26,7 +26,7 @@ public class ConfigFirebase {
         }
         return auth;
     }
-    
+
     // metodo para guaradar a imagem no firebase
     public static StorageReference getFirebaseStorege(){
         if (storege == null){
