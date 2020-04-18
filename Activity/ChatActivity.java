@@ -32,6 +32,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -44,6 +45,7 @@ import br.com.michel.android.whatsapp.congfirebase.ConfigFirebase;
 import br.com.michel.android.whatsapp.helper.Base64Custom;
 import br.com.michel.android.whatsapp.helper.UsuarioFirebae;
 import br.com.michel.android.whatsapp.model.COnversa;
+import br.com.michel.android.whatsapp.model.Grupo;
 import br.com.michel.android.whatsapp.model.Mensagem;
 import br.com.michel.android.whatsapp.model.Usuario;
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -65,6 +67,8 @@ public class ChatActivity extends AppCompatActivity {
     private ImageButton btnMSG;
     private StorageReference storageReference;
     private static final int SELECAO_CAMERA = 100;
+    private Grupo grupo;
+    private Usuario usuarioRemetent = UsuarioFirebae.getDadosUser();
 
 
 
@@ -93,20 +97,37 @@ public class ChatActivity extends AppCompatActivity {
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null){
+            if (bundle.containsKey("chatGrupo")){
 
-            usuariodesd = (Usuario) bundle.getSerializable("chatContato");
-            textViewnome.setText(usuariodesd.getNome());
+                grupo = (Grupo) bundle.getSerializable("chatGrupo");
+                idUsuarioDestinatario = grupo.getId();
 
-            String foto = usuariodesd.getFoto();
-            if (foto != null){
-                Uri url = Uri.parse(usuariodesd.getFoto());
-                Glide.with(ChatActivity.this).load(url).into(circleImageView);
+                textViewnome.setText(grupo.getNome());
+
+                String foto = grupo.getFoto();
+                if (foto != null){
+                    Uri url = Uri.parse(foto);
+                    Glide.with(ChatActivity.this).load(url).into(circleImageView);
+                }else {
+                    circleImageView.setImageResource(R.drawable.padrao);
+                }
+
             }else {
-                circleImageView.setImageResource(R.drawable.padrao);
-            }
 
-            //recuperar dados usuario destinatario
-            idUsuarioDestinatario = Base64Custom.configBase64(usuariodesd.getEmail());
+                usuariodesd = (Usuario) bundle.getSerializable("chatContato");
+                textViewnome.setText(usuariodesd.getNome());
+
+                String foto = usuariodesd.getFoto();
+                if (foto != null){
+                    Uri url = Uri.parse(usuariodesd.getFoto());
+                    Glide.with(ChatActivity.this).load(url).into(circleImageView);
+                }else {
+                    circleImageView.setImageResource(R.drawable.padrao);
+                }
+
+                //recuperar dados usuario destinatario
+                idUsuarioDestinatario = Base64Custom.configBase64(usuariodesd.getEmail());
+            }
         }
 
         //configuracao do adapter do recyclerview
@@ -132,7 +153,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
     }
-    
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -193,16 +214,39 @@ public class ChatActivity extends AppCompatActivity {
         String msg = editTextMsg.getText().toString();
         if (!msg.isEmpty()){
 
-            Mensagem mensagem = new Mensagem();
-            mensagem.setIdUsuario(idUsuarioRemetente);
-            mensagem.setMsg(msg);
+            if (idUsuarioDestinatario != null){
+                Mensagem mensagem = new Mensagem();
+                mensagem.setIdUsuario(idUsuarioRemetente);
+                mensagem.setMsg(msg);
 
-            salvandoAMsg(idUsuarioRemetente, idUsuarioDestinatario, mensagem);
-            salvandoAMsg(idUsuarioDestinatario, idUsuarioRemetente, mensagem);
+                salvandoAMsg(idUsuarioRemetente, idUsuarioDestinatario, mensagem);
+                salvandoAMsg(idUsuarioDestinatario, idUsuarioRemetente, mensagem);
 
-            //salvar conversa
-            salvarconversa(mensagem);
+                //salvar conversa
+                salvarconversa(idUsuarioRemetente, idUsuarioDestinatario, usuariodesd, mensagem,false);
 
+
+                salvarconversa(idUsuarioDestinatario, idUsuarioRemetente, usuarioRemetent, mensagem,false);
+
+
+            }else{
+                for (Usuario membro: grupo.getMembros()){
+
+                    String idremetenetGrupo = Base64Custom.configBase64(membro.getEmail());
+                    String idUsuarioLogadoGrupo = UsuarioFirebae.getIdentificadordeUsuario();
+
+                    Mensagem mensagem = new Mensagem();
+                    mensagem.setIdUsuario(idUsuarioLogadoGrupo);
+                    mensagem.setMsg(msg);
+                    mensagem.setNome(usuarioRemetent.getNome());
+
+
+
+                    salvandoAMsg(idremetenetGrupo, idUsuarioDestinatario, mensagem);
+                    salvarconversa(idremetenetGrupo, idUsuarioDestinatario, usuariodesd, mensagem,true);
+
+                }
+            }
 
         }else {
             Toast.makeText(ChatActivity.this, "Digite uma mensagem para o destinatario", Toast.LENGTH_LONG).show();
@@ -211,14 +255,23 @@ public class ChatActivity extends AppCompatActivity {
         // alem do codigo digitado anteriormente sera necessario criar uma classe um model, que nesse caso o nome foi Menssagem
     }
 
-    private void salvarconversa(Mensagem msg){
+    private void salvarconversa(String idRemetente, String idDestinatario, Usuario usuarioexibicao, Mensagem msg, boolean isGroup){
 
         COnversa cOnversaRemetente = new COnversa();
-        cOnversaRemetente.setIdRemetente(idUsuarioRemetente);
-        cOnversaRemetente.setIdDestinatario(idUsuarioDestinatario);
+        cOnversaRemetente.setIdRemetente(idRemetente);
+        cOnversaRemetente.setIdDestinatario(idDestinatario);
         cOnversaRemetente.setUltimamsg(msg.getMsg());
         cOnversaRemetente.setUsuario(usuariodesd);
 
+        if (isGroup){
+            cOnversaRemetente.setIsgrupo(true);
+            cOnversaRemetente.setGrupo(grupo);
+
+        }else {
+            cOnversaRemetente.setUsuario(usuarioexibicao);
+            cOnversaRemetente.setIsgrupo(false);
+
+        }
         cOnversaRemetente.salvar();
     }
 
