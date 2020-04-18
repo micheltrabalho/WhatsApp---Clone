@@ -62,9 +62,23 @@ public class MensagemAdapte extends RecyclerView.Adapter<MensagemAdapte.MyViewHo
             Uri url = Uri.parse(iMG);
             Glide.with(context).load(url).into(holder.img);
 
+            String nome = mensagem.getNome();
+            if (!nome.isEmpty()){
+                holder.nome.setText(nome);
+            }
+
             holder.msg.setVisibility(View.GONE);
         }else {
+
             holder.msg.setText(mSG);
+
+            String nome = mensagem.getNome();
+            if (!nome.isEmpty()){
+                holder.nome.setText(nome);
+            }else {
+                holder.nome.setVisibility(View.GONE);
+            }
+
             holder.img.setVisibility(View.GONE);
         }
 
@@ -92,12 +106,15 @@ public class MensagemAdapte extends RecyclerView.Adapter<MensagemAdapte.MyViewHo
 
         TextView msg;
         ImageView img;
+        TextView nome;
+
 
         public MyViewHolder(View itemview){
             super(itemview);
 
             msg = itemview.findViewById(R.id.textViewMSG);
             img = itemview.findViewById(R.id.imageViewMSG);
+            nome = itemview.findViewById(R.id.txtNomeexibi);
         }
     }
 }
