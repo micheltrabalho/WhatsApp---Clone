@@ -10,8 +10,11 @@ public class COnversa {
     private String idDestinatario;
     private String ultimamsg;
     private Usuario usuario;
+    private Boolean isgrupo;
+    private Grupo grupo;
 
     public COnversa() {
+        //this.setIsgrupo(false);
     }
 
     public String getIdRemetente() {
@@ -23,6 +26,22 @@ public class COnversa {
         DatabaseReference conversaRef = databaseReference.child("usuariosWhatsApp");
 
         conversaRef.child("conversas").child(this.getIdRemetente()).child(getIdDestinatario()).setValue(this);
+    }
+
+    public Boolean getIsgrupo() {
+        return isgrupo;
+    }
+
+    public void setIsgrupo(Boolean isgrupo) {
+        this.isgrupo = isgrupo;
+    }
+
+    public Grupo getGrupo() {
+        return grupo;
+    }
+
+    public void setGrupo(Grupo grupo) {
+        this.grupo = grupo;
     }
 
     public void setIdRemetente(String idRemetente) {
