@@ -4,8 +4,19 @@ public class Mensagem {
     private String msg;
     private String idUsuario;
     private String img;
+    private String nome;
+
 
     public Mensagem() {
+        this.setNome("");
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
     }
 
     public String getMsg() {
