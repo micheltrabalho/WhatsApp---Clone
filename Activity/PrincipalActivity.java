@@ -58,6 +58,19 @@ public class PrincipalActivity extends AppCompatActivity {
         //configurando a lupa, la no "onCreateOptionsMenu" tem a continuacao da configuracao da lupa
 
         searchView = findViewById(R.id.materialSerachPrincipal);
+
+        searchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
+            @Override
+            public void onSearchViewShown() {
+
+            }
+
+            @Override
+            public void onSearchViewClosed() {
+                ConversasFragment fragment = (ConversasFragment) adapter.getPage(0);
+                fragment.recarregarConversas();
+            }
+        });
         searchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
